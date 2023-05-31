@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Bucket for real estate community data
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Used to differentiate prod / devl resources
+    AllowedValues:
+      - devl
+      - prod
+
+Resources:
+  # ---------------- S3 Bucket ---------------- #
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", ["real", "estate", "community", "ranking", !Ref Environment]]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ---------------- SSM ---------------- #
+  BucketSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /real-estate/community/bucket/name
+      Value: !Ref Bucket
+      Type: String
+      Description: Bucket for real estate community data
