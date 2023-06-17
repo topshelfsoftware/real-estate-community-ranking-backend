@@ -1,7 +1,7 @@
 from enum import Enum
 import logging
 from statistics import fmean
-from typing import Any
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,8 @@ from enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
 from __init__ import MODULE_NAME
-MAX_PREFERENCE = 5
+MAX_PREFERENCE = MAX_RATING = 5
+MIN_PREFERENCE = MIN_RATING = 1
 PRIMARY_KEY = "Community Name"
 CITY_KEY = "City"
 LOC_KEY = "Location"
@@ -37,6 +38,7 @@ POOL_KEY = "Indoor + Outdoor Pool"
 WOODWORK_KEY = "Woodwork Shop?"
 MTN_VIEW_KEY = "Nearby Mountain Views?"
 SOFTBALL_KEY = "Softball Field?"
+PICKLEBALL_KEY = "Competitive Pickleball?"
 SCORE_KEY = "Homebuyer Score"
 
 # ----------------------------------------------------------------------------#
@@ -114,7 +116,7 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
     
     def calc_score(multiplier: float, preference: int):
         """Calculate a score given a multiplier and a homebuyer preference."""
-        return multiplier*(preference-1)/(MAX_PREFERENCE-1)
+        return multiplier*(preference-MIN_PREFERENCE)/(MAX_PREFERENCE-MIN_PREFERENCE)
 
     def score_feature_yes_no(community: str, score: float, feature_present: str, **kwargs) -> float:
         """Score a feature that is either present or not in a community."""
@@ -127,6 +129,20 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
         logger.debug(f"community: {community:25} | " \
                      f"new_score: {new_score:.2f} | " \
                      f"feature_present: {feature_present:8} | " \
+                     f"preference: {preference}")
+        return new_score
+
+    def score_competition(community: str, score: float, competition: int, **kwargs) -> float:
+        """Score a feature based on its competition rating."""
+        preference = int(kwargs["preference"])
+        if pd.isnull(competition):
+            new_score = score
+        else:
+            mult = (competition-MIN_RATING)/(MAX_RATING-MIN_RATING)
+            new_score = score + calc_score(mult, preference)
+        logger.debug(f"community: {community:25} | " \
+                     f"new_score: {new_score:.2f} | " \
+                     f"competition: {competition} | " \
                      f"preference: {preference}")
         return new_score
 
@@ -164,7 +180,7 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
                      f"preference: {preference}")
         return new_score
 
-    def apply_score_func(df: pd.DataFrame, scoring_func: Any, feature: str, **kwargs) -> pd.Series:
+    def apply_score_func(df: pd.DataFrame, scoring_func: Callable, feature: str, **kwargs) -> pd.Series:
         """Generic function to apply a supplied scoring function to an entire DataFrame column."""
         logger.info(feature)
         score_series = df.apply(lambda x: scoring_func(x.name, x[SCORE_KEY], x[feature], **kwargs), axis=1)
@@ -198,6 +214,9 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
         DOG_PARK_KEY: {
             "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["dog_park"] }
         },
+        PICKLEBALL_KEY: {
+            "func": score_competition, "kwargs": { "preference": hb_wants["competitive_pickleball"] } 
+        },
         GOLF_COURSE_QLTY_KEY: {
             "func": score_quality, "kwargs": { "preference": hb_wants["quality_golf_courses"], "quality_enum": GolfCourseQuality } 
         },
@@ -215,7 +234,6 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
     for feature,scoring in community_features.items():
         df[SCORE_KEY] = apply_score_func(df, scoring["func"], feature, **scoring["kwargs"])
 
-    # TODO: add `competitive_pickleball`
     return df
 
 
@@ -237,7 +255,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "location": row[LOC_KEY],
             "avg_price": row[PRICE_KEY],
             "avg_age": row[HOME_AGE_KEY],
-            # "hoa_fee": row[HOA_KEY],  # there is an HOA column in each sheet that is causing a KeyError after merging sheets
+            # TODO: "hoa_fee": row[HOA_KEY],  # there is an HOA column in each sheet that is causing a KeyError after merging sheets
             "preservation_fee": row[PRES_KEY],
             "size": row[SIZE_KEY],
             "n_golf_courses": row[N_GOLF_COURSE_KEY],
@@ -252,6 +270,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "woodwork": row[WOODWORK_KEY],
             "mtn_view": row[MTN_VIEW_KEY],
             "softball": row[SOFTBALL_KEY],
+            "competitive_pickleball": row[PICKLEBALL_KEY],
         }
     return top_communities
 

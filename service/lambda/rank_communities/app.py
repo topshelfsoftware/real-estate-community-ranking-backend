@@ -39,17 +39,21 @@ def lambda_handler(event, context):
         df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
 
     status_code = 200
-    body = {}
+    body = {"metadata": {}}
 
     # filter communties by needs
     df_needs = filter_communities(df_needs, hb_needs)
-    if len(df_needs.index) == 0:
+    n_communities_total = len(df_wants.index)
+    n_communities_filtered = len(df_needs.index)
+    body["metadata"]["n_communities_total"] = n_communities_total
+    body["metadata"]["n_communities_filtered"] = n_communities_filtered
+    if n_communities_filtered == 0:
         # payload has filtered out all communities so
         # the client (CPU) should modify the request
         status_code = 422
         body["error"] = "Unprocessable Content"
         body["error_msg"] = "All communities have been filtered out leaving none to rank. " \
-                            "Modify request payload."
+                            "Modify homebuyer needs in request payload."
         return {
             "statusCode": status_code,
             "body": body
@@ -73,28 +77,9 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
-    event = {
-        "needs": {
-            "price_range_lower": "400k",
-            "price_range_upper": "MAX",
-            "age_of_home": "Does not Matter",
-            "location": ["West Valley", "Isolated from City"],
-            "size_of_community": ["Small", "Medium"]
-        },
-        "wants": {
-            "gated": 4,
-            "quality_golf_courses": 5,
-            "mult_golf_courses": 4,
-            "mountain_views": 4,
-            "many_social_clubs": 2,
-            "softball_field": 1,
-            "fishing": 1,
-            "woodwork_shop": 1,
-            "competitive_pickleball": 3,
-            "indoor_pool": 1,
-            "quality_trails": 2,
-            "dog_park": 1
-        },
-        "email_address": "hi@example.com"
-    }
+    import json
+    with open("event.json", "r") as fp:
+        event = json.load(fp)
     resp = lambda_handler(event, None)
+    with open("top_communities.json", "w") as fp:
+        json.dump(resp["body"], fp, indent=4)
