@@ -77,9 +77,18 @@ def lambda_handler(event, context):
 
 
 if __name__ == "__main__":
+    import argparse
     import json
-    with open("event.json", "r") as fp:
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--event-file", dest="event_file", type=str, required=True,
+                        help="JSON file containing the Lambda event object")
+    parser.add_argument("--out-file", dest="out_file", type=str, required=True,
+                        help="JSON file to write the Lambda response body")
+    args = parser.parse_args()
+
+    with open(args.event_file, "r") as fp:
         event = json.load(fp)
     resp = lambda_handler(event, None)
-    with open("top_communities.json", "w") as fp:
+    with open(args.out_file, "w") as fp:
         json.dump(resp["body"], fp, indent=4)
