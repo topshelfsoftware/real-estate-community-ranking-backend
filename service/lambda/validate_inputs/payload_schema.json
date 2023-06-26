@@ -1,0 +1,136 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "version": "1.0.0",
+    "title": "PayloadSchema",
+    "type": "object",
+    "properties": {
+        "needs": { 
+            "type": "object",
+            "properties": {
+                "price_range_lower": {
+                    "type": "string",
+                    "enum": [ "200k", "400k", "600k", "800k" ]
+                },
+                "price_range_upper": {
+                    "type": "string",
+                    "enum": [ "400k", "600k", "800k", "MAX" ]
+                },
+                "age_of_home": {
+                    "type": "string",
+                    "enum": [
+                        "Does not matter",
+                        "Newer than 1970",
+                        "Newer than 1990",
+                        "Newer than 2000"
+                    ]
+                },
+                "location": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "Anywhere",
+                            "West Valley",
+                            "Central",
+                            "East Valley",
+                            "Isolated from city"
+                        ]
+                    }
+                },
+                "size_of_community": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [ "Does not matter", "Small", "Medium", "Large" ]
+                    }
+                }
+            },
+            "required": [
+                "price_range_lower", "price_range_upper", "age_of_home", "location", "size_of_community"
+            ]
+        },
+        "wants": {
+            "type": "object",
+            "properties": {
+                "gated": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "quality_golf_courses": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "mult_golf_courses": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "mountain_views": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "many_social_clubs": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "softball_field": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "fishing": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "woodwork_shop": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "indoor_pool": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "quality_trails": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "dog_park": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                "competitive_pickleball": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                }
+            },
+            "required": [
+                "gated", "quality_golf_courses", "mult_golf_courses", "mountain_views",
+                "many_social_clubs", "softball_field", "fishing", "woodwork_shop",
+                "indoor_pool", "quality_trails", "dog_park", "competitive_pickleball"
+            ]
+        },
+        "email_address": {
+            "type": "string",
+            "format": "email",
+            "pattern": "^\\S+@\\S+\\.\\S+$",
+            "minLength": 6,
+            "maxLength": 127
+        },
+        "email_homebuyer": {
+            "type": "boolean"
+        }
+    },
+    "required": [
+        "needs", "wants", "email_address", "email_homebuyer"
+    ]
+}
