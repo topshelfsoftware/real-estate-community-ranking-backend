@@ -41,7 +41,7 @@ Resources:
   BucketSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /real-estate/community/bucket/name
+      Name: /s3/real-estate/community/bucket/name
       Value: !Ref Bucket
       Type: String
       Description: Bucket for real estate community data
