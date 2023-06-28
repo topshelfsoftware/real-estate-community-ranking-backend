@@ -1,5 +1,4 @@
 from enum import Enum
-import logging
 from statistics import fmean
 from typing import Callable
 
@@ -7,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from topshelfsoftware_util.common import fmt_json
-from topshelfsoftware_util.log import add_console_handler, get_logger
+from topshelfsoftware_util.log import get_logger
 
 from enum_needs import Filter, Price, Location, Size
 from enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
@@ -44,8 +43,7 @@ SCORE_KEY = "Homebuyer Score"
 # ----------------------------------------------------------------------------#
 #                               --- Logging ---                               #
 # ----------------------------------------------------------------------------#
-logger = get_logger(f"{MODULE_NAME}.{__name__}", level=logging.INFO)
-add_console_handler(logger)
+logger = get_logger(f"{MODULE_NAME}.{__name__}")
 
 # ----------------------------------------------------------------------------#
 #                                 --- MAIN ---                                #
@@ -255,7 +253,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "location": row[LOC_KEY],
             "avg_price": row[PRICE_KEY],
             "avg_age": row[HOME_AGE_KEY],
-            # TODO: "hoa_fee": row[HOA_KEY],  # there is an HOA column in each sheet that is causing a KeyError after merging sheets
+            "hoa_fee": row[HOA_KEY],
             "preservation_fee": row[PRES_KEY],
             "size": row[SIZE_KEY],
             "n_golf_courses": row[N_GOLF_COURSE_KEY],

@@ -1,10 +1,10 @@
-import boto3
 from botocore.exceptions import ClientError as BotoClientError
 import pandas as pd
 
+from topshelfsoftware_util.aws import create_boto3_client
 from topshelfsoftware_util.common import fmt_json
 from topshelfsoftware_util.io import cdtmp
-from topshelfsoftware_util.log import add_console_handler, get_logger
+from topshelfsoftware_util.log import get_logger
 
 from communities import (
     compile_top_communities, filter_communities, rank_communities,
@@ -13,14 +13,15 @@ from communities import (
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME
-s3_client = boto3.client("s3")
+from __init__ import (
+    MODULE_NAME, COMMUNITY_DATA_BUCKET_NAME, COMMUNITY_DATA_OBJECT_NAME
+)
+s3_client = create_boto3_client("s3")
 
 # ----------------------------------------------------------------------------#
 #                               --- Logging ---                               #
 # ----------------------------------------------------------------------------#
 logger = get_logger(f"{MODULE_NAME}.{__name__}")
-add_console_handler(logger)
 
 # ----------------------------------------------------------------------------#
 #                                 --- MAIN ---                                #
@@ -31,9 +32,20 @@ def lambda_handler(event, context):
     hb_wants: dict = event["wants"]
 
     with cdtmp():
-        # TODO: download .xlsx file from s3
-        xlsx_fn = ""
-
+        if "excel_file" in event:
+            xlsx_fn = event["excel_file"]
+        else:
+            xlsx_fn = COMMUNITY_DATA_OBJECT_NAME
+            try:
+                logger.info(f"downloading s3 obj {COMMUNITY_DATA_OBJECT_NAME} " \
+                            f"from bucket {COMMUNITY_DATA_BUCKET_NAME}")
+                s3_client.download_file(COMMUNITY_DATA_BUCKET_NAME,
+                                        COMMUNITY_DATA_OBJECT_NAME,
+                                        xlsx_fn)
+            except BotoClientError as e:
+                logger.error(e)
+                raise e
+        
         # read excel sheets into memory
         df_needs = read_excel_sheet(xlsx_fn, sheet_num=0)
         df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
@@ -85,10 +97,14 @@ if __name__ == "__main__":
                         help="JSON file containing the Lambda event object")
     parser.add_argument("--out-file", dest="out_file", type=str, required=True,
                         help="JSON file to write the Lambda response body")
+    parser.add_argument("--excel-file", dest="excel_file", type=str, required=False,
+                        help="Excel file containing community spreadsheet data")
     args = parser.parse_args()
 
     with open(args.event_file, "r") as fp:
         event = json.load(fp)
+    if args.excel_file is not None:
+        event["excel_file"] = args.excel_file
     resp = lambda_handler(event, None)
     with open(args.out_file, "w") as fp:
         json.dump(resp["body"], fp, indent=4)
