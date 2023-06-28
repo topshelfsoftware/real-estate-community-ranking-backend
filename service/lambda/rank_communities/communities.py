@@ -180,7 +180,7 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
 
     def apply_score_func(df: pd.DataFrame, scoring_func: Callable, feature: str, **kwargs) -> pd.Series:
         """Generic function to apply a supplied scoring function to an entire DataFrame column."""
-        logger.info(feature)
+        logger.debug(feature)
         score_series = df.apply(lambda x: scoring_func(x.name, x[SCORE_KEY], x[feature], **kwargs), axis=1)
         return score_series
 
