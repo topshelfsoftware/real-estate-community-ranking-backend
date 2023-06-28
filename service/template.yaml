@@ -104,7 +104,7 @@ Resources:
       CodeUri: lambda/rank_communities
       Handler: app.lambda_handler
       MemorySize: 256
-      Timeout: 15
+      Timeout: 20
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
