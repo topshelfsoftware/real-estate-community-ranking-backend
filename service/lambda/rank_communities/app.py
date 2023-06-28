@@ -51,24 +51,24 @@ def lambda_handler(event, context):
         df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
 
     status_code = 200
-    body = {"metadata": {}}
+    response = {}
 
     # filter communties by needs
     df_needs = filter_communities(df_needs, hb_needs)
     n_communities_total = len(df_wants.index)
     n_communities_filtered = len(df_needs.index)
-    body["metadata"]["n_communities_total"] = n_communities_total
-    body["metadata"]["n_communities_filtered"] = n_communities_filtered
+    response["n_communities_total"] = n_communities_total
+    response["n_communities_filtered"] = n_communities_filtered
     if n_communities_filtered == 0:
         # payload has filtered out all communities so
         # the client (CPU) should modify the request
         status_code = 422
-        body["error"] = "Unprocessable Content"
-        body["error_msg"] = "All communities have been filtered out leaving none to rank. " \
+        response["error"] = "Unprocessable Content"
+        response["error_msg"] = "All communities have been filtered out leaving none to rank. " \
                             "Modify homebuyer needs in request payload."
         return {
             "statusCode": status_code,
-            "body": body
+            "body": response
         }
 
     # score communities by wants
@@ -79,12 +79,12 @@ def lambda_handler(event, context):
     df = rank_communities(df)
 
     # get the top 3 communities (at most)
-    body["top_communities"] = compile_top_communities(df, n=3)
-    logger.info(fmt_json(body))
+    response["top_communities"] = compile_top_communities(df, n=3)
+    logger.info(fmt_json(response))
 
     return {
         "statusCode": status_code,
-        "body": body
+        "body": response
     }
 
 
