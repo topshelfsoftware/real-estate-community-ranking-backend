@@ -1,0 +1,35 @@
+# Usage (specify env):
+#   sam deploy --config-env [devl|prod]
+
+version=0.1
+[default]
+[default.deploy]
+[devl.deploy.parameters]
+region = "us-west-2"
+s3_bucket = "topshelfsoftware-sam-deploy-00001-1-devl"
+s3_prefix = "real-estate-community-ranking-bucket"
+stack_name = "real-estate-community-ranking-bucket"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+tags = [
+    "CustomerId=00001",
+    "ProjectId=00001-1"
+]
+parameter_overrides = [
+    "Env=devl"
+]
+
+[prod.deploy.parameters]
+region = "us-west-2"
+s3_bucket = "topshelfsoftware-sam-deploy-00001-1-prod"
+s3_prefix = "real-estate-community-ranking-bucket"
+stack_name = "real-estate-community-ranking-bucket"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+tags = [
+    "CustomerId=00001",
+    "ProjectId=00001-1"
+]
+parameter_overrides = [
+    "Env=prod"
+]

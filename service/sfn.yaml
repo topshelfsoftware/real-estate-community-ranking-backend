@@ -1,0 +1,24 @@
+Comment: Real Estate Community Ranking Workflow
+StartAt: ValidateInputs
+TimeoutSeconds: 27
+States:
+  ValidateInputs:
+    Type: Task
+    Resource: "${validate_inputs_arn}"
+    Next: RankCommunities
+    Retry: [ {
+      ErrorEquals: [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+      IntervalSeconds: 2,
+      MaxAttempts: 6,
+      BackoffRate: 2
+    } ]
+  RankCommunities:
+    Type: Task
+    Resource: "${rank_communities_arn}"
+    End: true
+    Retry: [ {
+      ErrorEquals: [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+      IntervalSeconds: 2,
+      MaxAttempts: 6,
+      BackoffRate: 2
+    } ]

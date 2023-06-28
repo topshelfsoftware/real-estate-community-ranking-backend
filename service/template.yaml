@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Service for ranking 55+ real estate communities
+
+Parameters:
+  Env:
+    Type: String
+    Description: Deployment environment
+    AllowedValues:
+      - devl
+      - prod
+  Vpc:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /vpc/id
+  VpceS3:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /vpce/private/s3
+  PrvSubnets:
+    Type: AWS::SSM::Parameter::Value<CommaDelimitedList>
+    Default: /vpc/private/subnet/ids
+  PubSubnets:
+    Type: AWS::SSM::Parameter::Value<CommaDelimitedList>
+    Default: /vpc/public/subnet/ids
+  TopshelfUtilLayer:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /lambda/layer/arn/topshelfsoftware-util
+  JsonSchemaLayer:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /lambda/layer/arn/jsonschema
+  PandasLayer:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /lambda/layer/arn/pandas
+  CommunityDataS3Bucket:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /s3/real-estate/community/bucket/name
+  CommunityDataS3Object:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /s3/real-estate/community/object/name
+
+Globals:
+  Function:
+    MemorySize: 128
+    Timeout: 30
+    Runtime: python3.9
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      SubnetIds: !Ref PrvSubnets
+    Layers:
+      - !Ref TopshelfUtilLayer
+
+Resources:
+  # --------------- SG / IAM --------------- #
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP(s) access to all routable
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - Description: HTTPS
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 10.0.0.0/8
+        - Description: HTTP
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 10.0.0.0/8
+  
+  WorkflowRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+  
+  InvokeLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: RealEstateCommunityRankingInvokeLambdaPolicy
+      PolicyDocument:
+        Statement:
+          - Action:
+            - lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+            - !GetAtt RankCommunities.Arn
+            - !GetAtt ValidateInputs.Arn
+      Roles:
+        - !Ref WorkflowRole
+  
+  # --------------- LAMBDA --------------- #
+  RankCommunities:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Rank top 55+ communities based on homebuyer needs/wants
+      CodeUri: lambda/rank_communities
+      Handler: app.lambda_handler
+      MemorySize: 256
+      Timeout: 20
+      Policies:
+        - VPCAccessPolicy: {}
+        - Statement:
+          - Action:
+            - s3:GetObject
+            Effect: Allow
+            Resource:
+            - !Sub "arn:aws:s3:::${CommunityDataS3Bucket}/*"
+      Layers:
+        - !Ref PandasLayer
+      Environment:
+        Variables:
+          COMMUNITY_DATA_BUCKET_NAME: !Ref CommunityDataS3Bucket
+          COMMUNITY_DATA_OBJECT_NAME: !Ref CommunityDataS3Object
+  
+  ValidateInputs:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Validate inputs to the 55+ community ranking service
+      CodeUri: lambda/validate_inputs
+      Handler: app.lambda_handler
+      Timeout: 5
+      Policies:
+        - VPCAccessPolicy: {}
+      Layers:
+        - !Ref JsonSchemaLayer
+  
+  # --------------- STEP FUNCTIONS --------------- #
+  RealEstateRankingWorkflow:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Role: !GetAtt WorkflowRole.Arn
+      DefinitionUri: sfn.yaml
+      DefinitionSubstitutions:
+        rank_communities_arn: !GetAtt RankCommunities.Arn
+        validate_inputs_arn: !GetAtt ValidateInputs.Arn
+
+  # --------------- SSM --------------- #
+  WorkflowArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /sfn/real-estate/ranking/workflow/arn
+      Description: ARN for real estate community ranking stepfunction
+      Type: String
+      Value: !Ref RealEstateRankingWorkflow
+
+# --------------- OUTPUTS --------------- #

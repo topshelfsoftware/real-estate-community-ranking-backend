@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Bucket for real estate community data
+
+Parameters:
+  Env:
+    Type: String
+    Description: Deployment environment
+    AllowedValues:
+      - devl
+      - prod
+  ProjectId:
+     Type: String
+     Description: Identifier for the project
+     MinLength: '7'
+     MaxLength: '9'
+     AllowedPattern: '(\d{5}-\d{1,3})'
+     ConstraintDescription: must include exactly five digits, one dash, and one to three more digits (e.g. 12345-678)
+     Default: 00001-1
+
+Resources:
+  # ---------------- S3 Bucket ---------------- #
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join ["-", ["real", "estate", "community", "ranking", !Ref ProjectId, !Ref Env]]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ---------------- SSM ---------------- #
+  BucketSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /s3/real-estate/community/bucket/name
+      Value: !Ref Bucket
+      Type: String
+      Description: Bucket for real estate community data
