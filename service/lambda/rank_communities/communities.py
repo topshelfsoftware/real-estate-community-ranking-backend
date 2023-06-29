@@ -37,6 +37,7 @@ POOL_KEY = "Indoor + Outdoor Pool"
 WOODWORK_KEY = "Woodwork Shop?"
 MTN_VIEW_KEY = "Nearby Mountain Views?"
 SOFTBALL_KEY = "Softball Field?"
+ISOLATED_KEY = "Isolated From Rest of City"
 PICKLEBALL_KEY = "Competitive Pickleball?"
 SCORE_KEY = "Homebuyer Score"
 
@@ -202,6 +203,9 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
         SOFTBALL_KEY: {
             "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["softball_field"] }
         },
+        ISOLATED_KEY: {
+            "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["isolated_from_city"] }
+        },
         FISH_KEY: {
             "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["fishing"] }
         },
@@ -270,6 +274,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "woodwork": row[WOODWORK_KEY],
             "mtn_view": row[MTN_VIEW_KEY],
             "softball": row[SOFTBALL_KEY],
+            "isolated_from_city": row[ISOLATED_KEY],
             "competitive_pickleball": row[PICKLEBALL_KEY],
         }
     return top_communities
