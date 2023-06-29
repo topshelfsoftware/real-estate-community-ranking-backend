@@ -89,6 +89,8 @@ def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
     else:
         year_built = int(''.join(filter(str.isdigit, age_of_home)))
 
+    locations = "|".join(location)
+
     # cluster community sizes
     logger.info(f"Clustering size of communities: {Size.SML}, {Size.MED}, {Size.LRG}")
     df.sort_values(by=HOME_TOT_KEY, inplace=True)
@@ -99,7 +101,7 @@ def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
     # filter by each community attribute
     logger.info("Filtering by each community attribute: Size, Location, Price, & Age")
     df = df[df[SIZE_KEY].isin(size_of_community)]
-    df = df[df[LOC_KEY].isin(location)]
+    df = df[df[LOC_KEY].str.contains(locations)]
     df = df[df[PRICE_KEY].isin(range(price_range_lower, price_range_upper+1))]
     df = df[df[HOME_AGE_KEY] > year_built]
     logger.debug(df.to_string())
