@@ -51,7 +51,9 @@ def lambda_handler(event, context):
         df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
 
     status_code = 200
-    response = {}
+    response = {
+        "email_address": event["email_address"]
+    }
 
     # filter communties by needs
     df_needs = filter_communities(df_needs, hb_needs)
