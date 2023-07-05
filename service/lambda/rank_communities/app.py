@@ -10,6 +10,7 @@ from communities import (
     compile_top_communities, filter_communities, rank_communities,
     read_excel_sheet, score_communities
 )
+from exceptions import UnprocessableContentError
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
@@ -50,7 +51,6 @@ def lambda_handler(event, context):
         df_needs = read_excel_sheet(xlsx_fn, sheet_num=0)
         df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
 
-    status_code = 200
     response = {
         "email_address": event["email_address"]
     }
@@ -64,14 +64,10 @@ def lambda_handler(event, context):
     if n_communities_filtered == 0:
         # payload has filtered out all communities so
         # the client (CPU) should modify the request
-        status_code = 422
-        response["error"] = "Unprocessable Content"
-        response["error_msg"] = "All communities have been filtered out leaving none to rank. " \
-                            "Modify homebuyer needs in request payload."
-        return {
-            "statusCode": status_code,
-            "body": response
-        }
+        err_msg = "All communities have been filtered out leaving none to rank. " \
+                  "Modify homebuyer needs in request payload."
+        logger.error(err_msg)
+        raise UnprocessableContentError(err_msg)
 
     # score communities by wants
     df_wants = score_communities(df_wants, hb_wants)
@@ -84,10 +80,7 @@ def lambda_handler(event, context):
     response["top_communities"] = compile_top_communities(df, n=3)
     logger.info(fmt_json(response))
 
-    return {
-        "statusCode": status_code,
-        "body": response
-    }
+    return response
 
 
 if __name__ == "__main__":
@@ -109,4 +102,4 @@ if __name__ == "__main__":
         event["excel_file"] = args.excel_file
     resp = lambda_handler(event, None)
     with open(args.out_file, "w") as fp:
-        json.dump(resp["body"], fp, indent=4)
+        json.dump(resp, fp, indent=4)
