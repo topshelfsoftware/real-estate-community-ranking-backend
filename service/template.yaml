@@ -93,6 +93,23 @@ Resources:
         - !Ref WorkflowRole
   
   # --------------- LAMBDA --------------- #
+  RunRealEstateRanking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Launches the real estate community ranking workflow
+      CodeUri: lambda/run_real_estate_ranking
+      Handler: app.lambda_handler
+      Timeout: 25
+      # No VpcConfig => this Lambda deployed outsided VPC
+      Policies:
+        - VPCAccessPolicy: {}
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt RealEstateRankingWorkflow.Name
+        - AWSStepFunctionsReadOnlyAccess
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref RealEstateRankingWorkflow
+
   RankCommunities:
     Type: AWS::Serverless::Function
     Properties:
