@@ -1,6 +1,5 @@
 Comment: Real Estate Community Ranking Workflow
 StartAt: ValidateInputs
-TimeoutSeconds: 27
 States:
   ValidateInputs:
     Type: Task

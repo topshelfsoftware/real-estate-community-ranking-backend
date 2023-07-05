@@ -43,10 +43,6 @@ Globals:
     MemorySize: 128
     Timeout: 30
     Runtime: python3.9
-    VpcConfig:
-      SecurityGroupIds:
-        - !Ref SecurityGroup
-      SubnetIds: !Ref PrvSubnets
     Layers:
       - !Ref TopshelfUtilLayer
 
@@ -105,6 +101,10 @@ Resources:
       Handler: app.lambda_handler
       MemorySize: 256
       Timeout: 20
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
@@ -126,7 +126,11 @@ Resources:
       Description: Validate inputs to the 55+ community ranking service
       CodeUri: lambda/validate_inputs
       Handler: app.lambda_handler
-      Timeout: 5
+      Timeout: 3
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
       Policies:
         - VPCAccessPolicy: {}
       Layers:
