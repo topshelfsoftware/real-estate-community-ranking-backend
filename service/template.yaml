@@ -199,8 +199,8 @@ Resources:
       Description: Rank top 55+ communities based on homebuyer needs/wants
       CodeUri: lambda/rank_communities
       Handler: app.lambda_handler
-      MemorySize: 256
-      Timeout: 20
+      MemorySize: 1024
+      Timeout: 15
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroup
@@ -226,7 +226,7 @@ Resources:
       Description: Validate inputs to the 55+ community ranking service
       CodeUri: lambda/validate_inputs
       Handler: app.lambda_handler
-      Timeout: 3
+      Timeout: 5
       VpcConfig:
         SecurityGroupIds:
           - !Ref SecurityGroup
@@ -247,6 +247,14 @@ Resources:
         validate_inputs_arn: !GetAtt ValidateInputs.Arn
 
   # --------------- SSM --------------- #
+  RankApiKeyId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /api/key/id/real-estate/ranking/rank
+      Description: API Key for the /rank endpoint
+      Type: String
+      Value: !Ref RankApiKey
+
   WorkflowArn:
     Type: AWS::SSM::Parameter
     Properties:
@@ -256,3 +264,8 @@ Resources:
       Value: !Ref RealEstateRankingWorkflow
 
 # --------------- OUTPUTS --------------- #
+Outputs:
+  RankEndpoint:
+    Description: API Gateway endpoint URL for launching + polling the ranking workflow
+    Value:
+      !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/rank
