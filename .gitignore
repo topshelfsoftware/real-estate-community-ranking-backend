@@ -160,3 +160,8 @@ cython_debug/
 
 # AWS
 .aws-sam
+
+# Project files
+*api*.json
+*event*.json
+*communities*.json

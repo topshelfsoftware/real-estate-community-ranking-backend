@@ -16,7 +16,6 @@ class Location(str, Enum):
     WEST_VALLEY = "West Valley"
     EAST_VALLEY = "East Valley"
     CENTRAL = "Central"
-    ISOLATED = "Isolated from City"
 
 
 class Size(str, Enum):

@@ -19,7 +19,9 @@ MIN_PREFERENCE = MIN_RATING = 1
 PRIMARY_KEY = "Community Name"
 CITY_KEY = "City"
 LOC_KEY = "Location"
-PRICE_KEY = "Average Single Family Home Price (90 Days)"
+PRICE_AVG_KEY = "Average Single Family Home Price (90 Days)"
+PRICE_LOW_KEY = "Price Range Low"
+PRICE_HIGH_KEY = "Price Range High"
 HOA_KEY = "HOA/Rec Fee - 2 People Annual Total"
 SIZE_KEY = "Size of Community"
 HOME_TOT_KEY = "Total Homes in community"
@@ -37,6 +39,7 @@ POOL_KEY = "Indoor + Outdoor Pool"
 WOODWORK_KEY = "Woodwork Shop?"
 MTN_VIEW_KEY = "Nearby Mountain Views?"
 SOFTBALL_KEY = "Softball Field?"
+ISOLATED_KEY = "Isolated From Rest of City"
 PICKLEBALL_KEY = "Competitive Pickleball?"
 SCORE_KEY = "Homebuyer Score"
 
@@ -80,7 +83,7 @@ def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
 
     price_range_lower = 1000*int(''.join(filter(str.isdigit, price_range_lower)))
     if price_range_upper.capitalize() == Price.MAX.value:
-        price_range_upper = df[PRICE_KEY].max()
+        price_range_upper = df[PRICE_HIGH_KEY].max()
     else:
         price_range_upper = 1000*int(''.join(filter(str.isdigit, price_range_upper)))        
     
@@ -88,6 +91,8 @@ def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
         year_built = 0
     else:
         year_built = int(''.join(filter(str.isdigit, age_of_home)))
+
+    locations = "|".join(location)
 
     # cluster community sizes
     logger.info(f"Clustering size of communities: {Size.SML}, {Size.MED}, {Size.LRG}")
@@ -99,8 +104,11 @@ def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
     # filter by each community attribute
     logger.info("Filtering by each community attribute: Size, Location, Price, & Age")
     df = df[df[SIZE_KEY].isin(size_of_community)]
-    df = df[df[LOC_KEY].isin(location)]
-    df = df[df[PRICE_KEY].isin(range(price_range_lower, price_range_upper+1))]
+    df = df[df[LOC_KEY].str.contains(locations)]
+    df = df[(df[PRICE_LOW_KEY].le(price_range_lower) & df[PRICE_HIGH_KEY].ge(price_range_lower)) | \
+            (df[PRICE_LOW_KEY].le(price_range_upper) & df[PRICE_HIGH_KEY].ge(price_range_upper)) | \
+            (df[PRICE_LOW_KEY].isin(range(price_range_lower, price_range_upper+1))) | \
+            (df[PRICE_HIGH_KEY].isin(range(price_range_lower, price_range_upper+1)))]
     df = df[df[HOME_AGE_KEY] > year_built]
     logger.debug(df.to_string())
 
@@ -200,6 +208,9 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
         SOFTBALL_KEY: {
             "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["softball_field"] }
         },
+        ISOLATED_KEY: {
+            "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["isolated_from_city"] }
+        },
         FISH_KEY: {
             "func": score_feature_yes_no, "kwargs": { "preference": hb_wants["fishing"] }
         },
@@ -251,8 +262,10 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "homebuyer_score": row[SCORE_KEY],
             "city": row[CITY_KEY],
             "location": row[LOC_KEY],
-            "avg_price": row[PRICE_KEY],
-            "avg_age": row[HOME_AGE_KEY],
+            "age_avg": row[HOME_AGE_KEY],
+            "price_avg": row[PRICE_AVG_KEY],
+            "price_lower": row[PRICE_LOW_KEY],
+            "price_upper": row[PRICE_HIGH_KEY],
             "hoa_fee": row[HOA_KEY],
             "preservation_fee": row[PRES_KEY],
             "size": row[SIZE_KEY],
@@ -268,6 +281,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "woodwork": row[WOODWORK_KEY],
             "mtn_view": row[MTN_VIEW_KEY],
             "softball": row[SOFTBALL_KEY],
+            "isolated_from_city": row[ISOLATED_KEY],
             "competitive_pickleball": row[PICKLEBALL_KEY],
         }
     return top_communities

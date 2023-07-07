@@ -43,12 +43,18 @@ Globals:
     MemorySize: 128
     Timeout: 30
     Runtime: python3.9
-    VpcConfig:
-      SecurityGroupIds:
-        - !Ref SecurityGroup
-      SubnetIds: !Ref PrvSubnets
     Layers:
       - !Ref TopshelfUtilLayer
+  Api:
+    Cors:
+      AllowHeaders: "'*'"
+      AllowMethods: "'POST'"
+      AllowOrigin: "'*'"
+    EndpointConfiguration:
+      Type: REGIONAL
+    Auth:
+      AddDefaultAuthorizerToCorsPreflight: false
+      ApiKeyRequired: true
 
 Resources:
   # --------------- SG / IAM --------------- #
@@ -68,6 +74,26 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 10.0.0.0/8
+  
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: APIInvokeBackendLambdaFunctions
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt RunRealEstateRanking.Arn
   
   WorkflowRole:
     Type: AWS::IAM::Role
@@ -96,15 +122,89 @@ Resources:
       Roles:
         - !Ref WorkflowRole
   
+  # --------------- API --------------- #
+  RestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Description: API for the real estate community ranking backend
+      Name: !Join ['-', [!Ref AWS::StackName, api]]
+      StageName: !Ref Env
+      EndpointConfiguration:
+        Type: REGIONAL
+
+  RankApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - RankApiUsagePlan
+    Properties:
+      Description: API Key for the /rank endpoint
+      Name: !Join ['-', [rank, api, key]]
+      Enabled: true
+      GenerateDistinctId: false
+      StageKeys:
+        - RestApiId: !Ref RestApi
+          StageName: !Ref Env
+
+  RankApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - RestApiStage
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: !Ref Env
+      Description: Usage plan for the /rank endpoint
+      UsagePlanName: !Join ['-', [rank, api, usage, plan]]
+      Quota:
+        Limit: 1000
+        Period: WEEK
+  
+  RankApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    DependsOn:
+      - RankApiKey
+    Properties:
+      KeyId: !Ref RankApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref RankApiUsagePlan
+
   # --------------- LAMBDA --------------- #
+  RunRealEstateRanking:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Launches the real estate community ranking workflow
+      CodeUri: lambda/run_real_estate_ranking
+      Handler: app.lambda_handler
+      Timeout: 25
+      # No VpcConfig => this Lambda deployed outsided VPC
+      Policies:
+        - VPCAccessPolicy: {}
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt RealEstateRankingWorkflow.Name
+        - AWSStepFunctionsReadOnlyAccess
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref RealEstateRankingWorkflow
+      Events:
+        Execute:
+          Type: Api
+          Properties:
+            Path: /rank
+            Method: post
+            RestApiId: !Ref RestApi
+
   RankCommunities:
     Type: AWS::Serverless::Function
     Properties:
       Description: Rank top 55+ communities based on homebuyer needs/wants
       CodeUri: lambda/rank_communities
       Handler: app.lambda_handler
-      MemorySize: 256
-      Timeout: 20
+      MemorySize: 1024
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
@@ -127,6 +227,10 @@ Resources:
       CodeUri: lambda/validate_inputs
       Handler: app.lambda_handler
       Timeout: 5
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
       Policies:
         - VPCAccessPolicy: {}
       Layers:
@@ -143,6 +247,14 @@ Resources:
         validate_inputs_arn: !GetAtt ValidateInputs.Arn
 
   # --------------- SSM --------------- #
+  RankApiKeyId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /api/key/id/real-estate/ranking/rank
+      Description: API Key for the /rank endpoint
+      Type: String
+      Value: !Ref RankApiKey
+
   WorkflowArn:
     Type: AWS::SSM::Parameter
     Properties:
@@ -152,3 +264,8 @@ Resources:
       Value: !Ref RealEstateRankingWorkflow
 
 # --------------- OUTPUTS --------------- #
+Outputs:
+  RankEndpoint:
+    Description: API Gateway endpoint URL for launching + polling the ranking workflow
+    Value:
+      !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/rank
