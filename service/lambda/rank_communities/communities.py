@@ -257,6 +257,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
     """Compile key information for the `n` highest ranked communities."""
     top_communities = {}
     top_df = df.head(n)
+    top_df.fillna("N/A", inplace=True)
     for idx,row in top_df.iterrows():
         top_communities[idx] = {
             "homebuyer_score": row[SCORE_KEY],
