@@ -9,7 +9,7 @@ from topshelfsoftware_util.log import get_logger
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME, STATE_MACHINE_ARN
+from .__init__ import MODULE_NAME, STATE_MACHINE_ARN
 sfn_client = create_boto3_client("stepfunctions")
 
 # ----------------------------------------------------------------------------#

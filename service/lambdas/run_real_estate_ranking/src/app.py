@@ -6,11 +6,11 @@ from botocore.exceptions import ClientError as BotoClientError
 from topshelfsoftware_util.common import fmt_json
 from topshelfsoftware_util.log import get_logger
 
-from sfn import SfnStatus, get_exec_hist, launch_sfn, poll_sfn
+from .sfn import SfnStatus, get_exec_hist, launch_sfn, poll_sfn
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME, STATE_MACHINE_ARN
+from .__init__ import MODULE_NAME, STATE_MACHINE_ARN
 KNOWN_ERRORS = {
     "ValidationError": HTTPStatus.BAD_REQUEST,
     "UnprocessableContentError": HTTPStatus.UNPROCESSABLE_ENTITY
@@ -129,21 +129,3 @@ def fmt_lambda_resp(status: HTTPStatus, body: dict,
     logger.info(f"status code: {status.value}")
     logger.info(f"response body: {fmt_json(body)}")
     return resp
-
-
-if __name__ == "__main__":
-    import argparse
-    import json
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--event-file", dest="event_file", type=str, required=True,
-                        help="JSON file containing the Lambda event object")
-    parser.add_argument("--out-file", dest="out_file", type=str, required=True,
-                        help="JSON file to write the Lambda response body")
-    args = parser.parse_args()
-
-    with open(args.event_file, "r") as fp:
-        event = json.load(fp)
-    resp = lambda_handler(event, None)
-    with open(args.out_file, "w") as fp:
-        json.dump(resp["body"], fp, indent=4)

@@ -8,12 +8,12 @@ import pandas as pd
 from topshelfsoftware_util.common import fmt_json
 from topshelfsoftware_util.log import get_logger
 
-from enum_needs import Filter, Price, Location, Size
-from enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
+from .enum_needs import Filter, Price, Location, Size
+from .enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME
+from .__init__ import MODULE_NAME
 MAX_PREFERENCE = MAX_RATING = 5
 MIN_PREFERENCE = MIN_RATING = 1
 PRIMARY_KEY = "Community Name"
