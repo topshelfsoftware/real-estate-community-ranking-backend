@@ -1,0 +1,19 @@
+{
+    "wants": {
+        "gated": 4,
+        "quality_golf_courses": 5,
+        "mult_golf_courses": 4,
+        "mountain_views": 4,
+        "many_social_clubs": 1,
+        "softball_field": 1,
+        "isolated_from_city": 1,
+        "fishing": 1,
+        "woodwork_shop": 1,
+        "indoor_pool": 1,
+        "quality_trails": 4,
+        "dog_park": 1,
+        "competitive_pickleball": 4
+    },
+    "email_address": "hi@example.com",
+    "email_homebuyer": false
+}

@@ -163,5 +163,4 @@ cython_debug/
 
 # Project files
 *api*.json
-*event*.json
 *communities*.json
