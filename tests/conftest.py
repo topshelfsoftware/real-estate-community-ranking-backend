@@ -43,7 +43,8 @@ def get_test_event_files(matching: str = None) -> list[str]:
     matching the provided string."""
     subset = []
     for file_name in ALL_EVENT_FILES:
-        file_kw = file_name.split(FILE_DELIMITER)
+        file_no_ext, _ = os.path.splitext(file_name)
+        file_kw = file_no_ext.split(FILE_DELIMITER)
         if matching is None or matching in file_kw:
             subset.append(file_name)
     return subset

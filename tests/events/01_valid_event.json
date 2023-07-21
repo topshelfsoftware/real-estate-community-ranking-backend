@@ -1,17 +1,14 @@
 {
     "needs": {
-        "price_range_lower": "200k",
-        "price_range_upper": "400k",
-        "age_of_home": "Does not matter",
+        "price_range_lower": "600k",
+        "price_range_upper": "MAX",
+        "age_of_home": "Newer than 1990",
         "location": [
             "West Valley",
-            "Central",
-            "East Valley"
+            "Central"
         ],
         "size_of_community": [
-            "Small",
-            "Medium",
-            "Large"
+            "Small"
         ]
     },
     "wants": {
