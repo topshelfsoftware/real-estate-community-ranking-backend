@@ -1,3 +1,4 @@
+import glob
 import os
 import sys
 
@@ -14,3 +15,6 @@ sys.path.append(LAMBDAS_PATH)
 # test file paths
 TEST_DATA_PATH = os.path.join(PROJ_ROOT_PATH, "tests", "data")
 TEST_EVENTS_PATH = os.path.join(PROJ_ROOT_PATH, "tests", "events")
+ALL_EVENT_FILES = [os.path.basename(x) for x in sorted(
+    glob.glob(os.path.join(TEST_EVENTS_PATH, "*.json"))
+)]
