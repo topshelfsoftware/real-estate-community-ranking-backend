@@ -17,6 +17,8 @@ from .exceptions import UnprocessableContentError
 from .__init__ import (
     MODULE_NAME, COMMUNITY_DATA_BUCKET_NAME, COMMUNITY_DATA_OBJECT_NAME
 )
+SHEET_NUM_NEEDS = 0
+SHEET_NUM_WANTS = 1
 s3_client = create_boto3_client("s3")
 
 # ----------------------------------------------------------------------------#
@@ -48,8 +50,8 @@ def lambda_handler(event, context):
                 raise e
         
         # read excel sheets into memory
-        df_needs = read_excel_sheet(xlsx_fn, sheet_num=0)
-        df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
+        df_needs = read_excel_sheet(xlsx_fn, SHEET_NUM_NEEDS)
+        df_wants = read_excel_sheet(xlsx_fn, SHEET_NUM_WANTS)
 
     response = {
         "email_address": event["email_address"]
