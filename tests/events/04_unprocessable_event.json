@@ -1,0 +1,30 @@
+{
+    "needs": {
+        "price_range_lower": "400k",
+        "price_range_upper": "600k",
+        "age_of_home": "Newer than 2000",
+        "location": [
+            "Central"
+        ],
+        "size_of_community": [
+            "Small"
+        ]
+    },
+    "wants": {
+        "gated": 5,
+        "quality_golf_courses": 1,
+        "mult_golf_courses": 1,
+        "mountain_views": 5,
+        "many_social_clubs": 2,
+        "softball_field": 1,
+        "isolated_from_city": 5,
+        "fishing": 1,
+        "woodwork_shop": 1,
+        "indoor_pool": 1,
+        "quality_trails": 4,
+        "dog_park": 5,
+        "competitive_pickleball": 2
+    },
+    "email_address": "hi@example.com",
+    "email_homebuyer": false
+}

@@ -18,3 +18,6 @@ TEST_EVENTS_PATH = os.path.join(PROJ_ROOT_PATH, "tests", "events")
 ALL_EVENT_FILES = [os.path.basename(x) for x in sorted(
     glob.glob(os.path.join(TEST_EVENTS_PATH, "*.json"))
 )]
+ALL_EXCEL_FILES = [os.path.basename(x) for x in sorted(
+    glob.glob(os.path.join(TEST_DATA_PATH, "*.xlsx"))
+)]
