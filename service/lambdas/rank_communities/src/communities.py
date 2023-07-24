@@ -194,7 +194,7 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
 
     # further clean the column data
     df[N_GOLF_COURSE_KEY] = pd.to_numeric(df[N_GOLF_COURSE_KEY], errors="coerce", downcast="integer")
-    df[N_CLUBS_KEY] = pd.to_numeric(df[N_CLUBS_KEY].astype(str).str.extract('(\d+)', expand=False),
+    df[N_CLUBS_KEY] = pd.to_numeric(df[N_CLUBS_KEY].astype(str).str.extract(r'(\d+)', expand=False),
                                              errors="coerce",
                                              downcast="integer")  # if any cells are NaN, then column gets upcast to float
 
