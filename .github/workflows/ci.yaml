@@ -25,12 +25,7 @@ jobs:
             service/lambdas/requirements.txt
             tests/requirements.txt
       
-      - name: Show me file structure
-        run: |
-          pwd
-          ls -l
-      
-      - name: Install dependencies
+      - name: Install dependencies with pip
         run: |
           python -m pip install --upgrade pip
           pip install -r service/lambdas/requirements.txt
