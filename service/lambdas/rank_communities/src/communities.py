@@ -27,6 +27,7 @@ SIZE_KEY = "Size of Community"
 HOME_TOT_KEY = "Total Homes in community"
 HOME_AGE_KEY = "Average Age of Home"
 PRES_KEY = "Preservation Fee"
+LINK_KEY = "Links"
 N_GOLF_COURSE_KEY = "# of Golf Courses"
 N_CLUBS_KEY = "# of Clubs Offered"
 N_REC_CENTER_KEY = "# of Rec Centers"
@@ -270,6 +271,7 @@ def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
             "hoa_fee": row[HOA_KEY],
             "preservation_fee": row[PRES_KEY],
             "size": row[SIZE_KEY],
+            "link": row[LINK_KEY],
             "n_golf_courses": row[N_GOLF_COURSE_KEY],
             "n_clubs": row[N_CLUBS_KEY],
             "n_rec_center": row[N_REC_CENTER_KEY],
