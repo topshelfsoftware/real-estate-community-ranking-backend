@@ -1,14 +1,15 @@
 """Validation module for service inputs."""
 
 import json
+import os
 
 import jsonschema
 from topshelfsoftware_util.log import get_logger
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME
-PAYLOAD_SCHEMA_FILE = "payload_schema.json"
+from .__init__ import MODULE_NAME, SRC_PATH
+PAYLOAD_SCHEMA_FILE = os.path.join(SRC_PATH, "payload_schema.json")
 
 # ----------------------------------------------------------------------------#
 #                               --- Logging ---                               #

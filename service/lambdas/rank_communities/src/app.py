@@ -6,17 +6,19 @@ from topshelfsoftware_util.common import fmt_json
 from topshelfsoftware_util.io import cdtmp
 from topshelfsoftware_util.log import get_logger
 
-from communities import (
+from .communities import (
     compile_top_communities, filter_communities, rank_communities,
     read_excel_sheet, score_communities
 )
-from exceptions import UnprocessableContentError
+from .exceptions import UnprocessableContentError
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import (
+from .__init__ import (
     MODULE_NAME, COMMUNITY_DATA_BUCKET_NAME, COMMUNITY_DATA_OBJECT_NAME
 )
+SHEET_NUM_NEEDS = 0
+SHEET_NUM_WANTS = 1
 s3_client = create_boto3_client("s3")
 
 # ----------------------------------------------------------------------------#
@@ -48,8 +50,8 @@ def lambda_handler(event, context):
                 raise e
         
         # read excel sheets into memory
-        df_needs = read_excel_sheet(xlsx_fn, sheet_num=0)
-        df_wants = read_excel_sheet(xlsx_fn, sheet_num=1)
+        df_needs = read_excel_sheet(xlsx_fn, SHEET_NUM_NEEDS)
+        df_wants = read_excel_sheet(xlsx_fn, SHEET_NUM_WANTS)
 
     response = {
         "email_address": event["email_address"]
@@ -81,25 +83,3 @@ def lambda_handler(event, context):
     logger.info(fmt_json(response))
 
     return response
-
-
-if __name__ == "__main__":
-    import argparse
-    import json
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--event-file", dest="event_file", type=str, required=True,
-                        help="JSON file containing the Lambda event object")
-    parser.add_argument("--out-file", dest="out_file", type=str, required=True,
-                        help="JSON file to write the Lambda response body")
-    parser.add_argument("--excel-file", dest="excel_file", type=str, required=False,
-                        help="Excel file containing community spreadsheet data")
-    args = parser.parse_args()
-
-    with open(args.event_file, "r") as fp:
-        event = json.load(fp)
-    if args.excel_file is not None:
-        event["excel_file"] = args.excel_file
-    resp = lambda_handler(event, None)
-    with open(args.out_file, "w") as fp:
-        json.dump(resp, fp, indent=4)

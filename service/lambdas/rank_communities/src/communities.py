@@ -8,12 +8,12 @@ import pandas as pd
 from topshelfsoftware_util.common import fmt_json
 from topshelfsoftware_util.log import get_logger
 
-from enum_needs import Filter, Price, Location, Size
-from enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
+from .enum_needs import Filter, Price, Location, Size
+from .enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-from __init__ import MODULE_NAME
+from .__init__ import MODULE_NAME
 MAX_PREFERENCE = MAX_RATING = 5
 MIN_PREFERENCE = MIN_RATING = 1
 PRIMARY_KEY = "Community Name"
@@ -194,7 +194,7 @@ def score_communities(df: pd.DataFrame, hb_wants: dict) -> pd.DataFrame:
 
     # further clean the column data
     df[N_GOLF_COURSE_KEY] = pd.to_numeric(df[N_GOLF_COURSE_KEY], errors="coerce", downcast="integer")
-    df[N_CLUBS_KEY] = pd.to_numeric(df[N_CLUBS_KEY].astype(str).str.extract('(\d+)', expand=False),
+    df[N_CLUBS_KEY] = pd.to_numeric(df[N_CLUBS_KEY].astype(str).str.extract(r'(\d+)', expand=False),
                                              errors="coerce",
                                              downcast="integer")  # if any cells are NaN, then column gets upcast to float
 
@@ -256,7 +256,7 @@ def rank_communities(df: pd.DataFrame) -> pd.DataFrame:
 def compile_top_communities(df: pd.DataFrame, n: int) -> dict:
     """Compile key information for the `n` highest ranked communities."""
     top_communities = {}
-    top_df = df.head(n)
+    top_df = df.copy().head(n)
     top_df.fillna("N/A", inplace=True)
     for idx,row in top_df.iterrows():
         top_communities[idx] = {

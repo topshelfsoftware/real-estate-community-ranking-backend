@@ -1,0 +1,31 @@
+{
+    "needs": {
+        "price_range_lower": "200k",
+        "price_range_upper": "400k",
+        "age_of_home": "Does not matter",
+        "location": [
+            "East Valley"
+        ],
+        "size_of_community": [
+            "Small",
+            "Medium"
+        ]
+    },
+    "wants": {
+        "gated": 1,
+        "quality_golf_courses": 1,
+        "mult_golf_courses": 1,
+        "mountain_views": 1,
+        "many_social_clubs": 1,
+        "softball_field": 1,
+        "isolated_from_city": 1,
+        "fishing": 1,
+        "woodwork_shop": 1,
+        "indoor_pool": 1,
+        "quality_trails": 1,
+        "dog_park": 1,
+        "competitive_pickleball": 1
+    },
+    "email_address": "hi@example.com",
+    "email_homebuyer": false
+}
