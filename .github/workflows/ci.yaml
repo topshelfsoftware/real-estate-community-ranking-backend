@@ -8,10 +8,6 @@ on:
     branches:
       - main
 
-env:
-  PROJ_DEPS: service/lambdas/requirements.txt
-  TEST_DEPS: tests/requirements.txt
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,14 +22,19 @@ jobs:
           python-version: '3.9'
           cache: pip
           cache-dependency-path: |
-            "$PROJ_DEPS"
-            "$TEST_DEPS"
+            service/lambdas/requirements.txt
+            tests/requirements.txt
+      
+      - name: Show me file structure
+        run: |
+          pwd
+          ls -l
       
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r "$PROJ_DEPS"
-          pip install -r "$TEST_DEPS"
+          pip install -r service/lambdas/requirements.txt
+          pip install -r tests/requirements.txt
       
       - name: Run tests with pytest
         run: pytest -v --cov
