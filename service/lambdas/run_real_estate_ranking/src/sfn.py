@@ -49,17 +49,20 @@ def launch_sfn(payload: dict) -> str:
     return execution_arn
 
 
-def poll_sfn(execution_arn: str, step: int = 1) -> dict:
+def poll_sfn(execution_arn: str, step: float = 1) -> dict:
     """Poll the step function for status.
     Return the execution response once the status is no longer `RUNNING`."""
     sfn_status = SfnStatus.RUNNING.value
+    n = 0
     while sfn_status == SfnStatus.RUNNING.value:
-        logger.info(f"polling execution arn: {execution_arn}")
+        time.sleep(step)
+        n += 1
+        
+        logger.debug(f"polling execution arn: {execution_arn}")
         res = sfn_client.describe_execution(executionArn=execution_arn)
-        logger.info(f"response: {fmt_json(res)}")
+        logger.info(f"poll #{n:02d} response: {fmt_json(res)}")
 
         sfn_status = res["status"]
-        time.sleep(step)
     logger.info(f"sfn status: {sfn_status}")
     return res
 

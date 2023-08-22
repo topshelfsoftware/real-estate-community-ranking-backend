@@ -60,7 +60,7 @@ def lambda_handler(event, context):
     
     # poll the stepfunction
     try:
-        sfn_resp = poll_sfn(execution_arn, step=2)
+        sfn_resp = poll_sfn(execution_arn, step=0.5)
         resp_status = sfn_resp["status"]
         resp_body["status"] = resp_status
         
