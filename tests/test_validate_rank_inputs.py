@@ -10,7 +10,7 @@ from conftest import get_test_event_files
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
 from __setup__ import LAMBDAS_PATH
-MODULE = "validate_inputs"
+MODULE = "validate_rank_inputs"
 
 # ----------------------------------------------------------------------------#
 #                               --- Logging ---                               #
@@ -21,8 +21,8 @@ logger = get_logger(f"test_{MODULE}")
 #                           --- Lambda Imports ---                            #
 # ----------------------------------------------------------------------------#
 sys.path.append(os.path.join(LAMBDAS_PATH, MODULE))
-from service.lambdas.validate_inputs.src.app import lambda_handler
-from service.lambdas.validate_inputs.src.validate import (
+from service.lambdas.validate_rank_inputs.src.app import lambda_handler
+from service.lambdas.validate_rank_inputs.src.validate import (
     jsonschema, validate_payload
 )
 

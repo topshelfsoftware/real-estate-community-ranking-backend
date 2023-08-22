@@ -115,7 +115,7 @@ Resources:
             Effect: Allow
             Resource:
             - !GetAtt RankCommunities.Arn
-            - !GetAtt ValidateInputs.Arn
+            - !GetAtt ValidateRankInputs.Arn
       Roles:
         - !Ref WorkflowRole
   
@@ -217,11 +217,11 @@ Resources:
           COMMUNITY_DATA_BUCKET_NAME: !Ref CommunityDataS3Bucket
           COMMUNITY_DATA_OBJECT_NAME: !Ref CommunityDataS3Object
   
-  ValidateInputs:
+  ValidateRankInputs:
     Type: AWS::Serverless::Function
     Properties:
       Description: Validate inputs to the 55+ community ranking service
-      CodeUri: lambdas/validate_inputs
+      CodeUri: lambdas/validate_rank_inputs
       Handler: src.app.lambda_handler
       Timeout: 5
       VpcConfig:
@@ -241,7 +241,7 @@ Resources:
       DefinitionUri: sfn.yaml
       DefinitionSubstitutions:
         rank_communities_arn: !GetAtt RankCommunities.Arn
-        validate_inputs_arn: !GetAtt ValidateInputs.Arn
+        validate_rank_inputs_arn: !GetAtt ValidateRankInputs.Arn
 
   # --------------- SSM --------------- #
   RankApiKeyId:
