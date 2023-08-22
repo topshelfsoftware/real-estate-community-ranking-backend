@@ -238,7 +238,7 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Role: !GetAtt WorkflowRole.Arn
-      DefinitionUri: sfn.yaml
+      DefinitionUri: sfn_rank.yaml
       DefinitionSubstitutions:
         rank_communities_arn: !GetAtt RankCommunities.Arn
         validate_rank_inputs_arn: !GetAtt ValidateRankInputs.Arn
