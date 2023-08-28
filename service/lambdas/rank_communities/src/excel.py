@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 
 from topshelfsoftware_util.log import get_logger
+
+from .exceptions import WorksheetNotFoundError
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
@@ -27,7 +29,10 @@ def read_excel_sheet(xlsx: Union[str, BytesIO],
         logger.info(f"Reading sheet {sheet_name} from file {xlsx} into DataFrame")
     elif isinstance(xlsx, BytesIO):
         logger.info(f"Reading sheet {sheet_name} from bytes into DataFrame")
-    df = pd.read_excel(xlsx, sheet_name=sheet_name)
+    try:
+        df = pd.read_excel(xlsx, sheet_name=sheet_name)
+    except ValueError as e:
+        raise WorksheetNotFoundError(str(e))
     
     logger.info(f"Cleansing the DataFrame")
     # remove leading/trailing whitespace
