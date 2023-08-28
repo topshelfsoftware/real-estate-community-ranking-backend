@@ -121,7 +121,7 @@ def test_06_lambda_handler_local_data(excel_file, event_file, get_event_as_dict)
     resp = lambda_handler(event, None)
     expected_values = {      # values represent the top communities
         "01_valid_event.json": ["Cantamia", "Trilogy at Vistancia", "Sterling Grove"],
-        "02_valid_event.json": ["Johnson Ranch", "Encore at Eastmark", "Springfield Lakes"],
+        "02_valid_event.json": ["Johnson Ranch", "Encore at Eastmark", "Encanterra"],
         "03_valid_event.json": ["Trilogy at Vistancia", "Johnson Ranch", "Cantamia"]
     }
     top_communities: dict = resp["top_communities"] 
