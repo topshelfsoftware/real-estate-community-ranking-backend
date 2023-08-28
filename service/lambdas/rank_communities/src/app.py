@@ -7,9 +7,10 @@ from topshelfsoftware_util.io import cdtmp
 from topshelfsoftware_util.log import get_logger
 
 from .communities import (
-    compile_top_communities, filter_communities, rank_communities,
-    read_excel_sheet, score_communities
+    compile_top_communities, filter_communities,
+    rank_communities, score_communities
 )
+from .excel import read_excel_sheet
 from .exceptions import UnprocessableContentError
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
@@ -17,8 +18,7 @@ from .exceptions import UnprocessableContentError
 from .__init__ import (
     MODULE_NAME, COMMUNITY_DATA_BUCKET_NAME, COMMUNITY_DATA_OBJECT_NAME
 )
-SHEET_NUM_NEEDS = 0
-SHEET_NUM_WANTS = 1
+from .communities import PRIMARY_KEY, SHEET_NAME_NEEDS, SHEET_NAME_WANTS
 s3_client = create_boto3_client("s3")
 
 # ----------------------------------------------------------------------------#
@@ -50,8 +50,8 @@ def lambda_handler(event, context):
                 raise e
         
         # read excel sheets into memory
-        df_needs = read_excel_sheet(xlsx_fn, SHEET_NUM_NEEDS)
-        df_wants = read_excel_sheet(xlsx_fn, SHEET_NUM_WANTS)
+        df_needs = read_excel_sheet(xlsx_fn, SHEET_NAME_NEEDS, PRIMARY_KEY)
+        df_wants = read_excel_sheet(xlsx_fn, SHEET_NAME_WANTS, PRIMARY_KEY)
 
     response = {
         "email_address": event["email_address"]

@@ -14,20 +14,30 @@ from .enum_wants import HasFeature, GolfCourseQuality, TrailsQuality
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
 from .__init__ import MODULE_NAME
-MAX_PREFERENCE = MAX_RATING = 5
-MIN_PREFERENCE = MIN_RATING = 1
 PRIMARY_KEY = "Community Name"
+
+# homebuyer needs
+SHEET_NAME_NEEDS = "Sheet1"
 CITY_KEY = "City"
 LOC_KEY = "Location"
 PRICE_AVG_KEY = "Average Single Family Home Price (90 Days)"
 PRICE_LOW_KEY = "Price Range Low"
 PRICE_HIGH_KEY = "Price Range High"
 HOA_KEY = "HOA/Rec Fee - 2 People Annual Total"
-SIZE_KEY = "Size of Community"
 HOME_TOT_KEY = "Total Homes in community"
 HOME_AGE_KEY = "Average Age of Home"
 PRES_KEY = "Preservation Fee"
 LINK_KEY = "Links"
+HEADERS_NEEDS = [
+    CITY_KEY, LOC_KEY, PRICE_AVG_KEY, PRICE_LOW_KEY, PRICE_HIGH_KEY,
+    HOA_KEY, HOME_TOT_KEY, HOME_AGE_KEY, PRES_KEY, LINK_KEY
+]
+SIZE_KEY = "Size of Community"
+
+# homebuyer wants
+SHEET_NAME_WANTS = "Sheet2"
+MAX_PREFERENCE = MAX_RATING = 5
+MIN_PREFERENCE = MIN_RATING = 1
 N_GOLF_COURSE_KEY = "# of Golf Courses"
 N_CLUBS_KEY = "# of Clubs Offered"
 N_REC_CENTER_KEY = "# of Rec Centers"
@@ -42,6 +52,11 @@ MTN_VIEW_KEY = "Nearby Mountain Views?"
 SOFTBALL_KEY = "Softball Field?"
 ISOLATED_KEY = "Isolated From Rest of City"
 PICKLEBALL_KEY = "Competitive Pickleball?"
+HEADERS_WANTS = [
+    N_GOLF_COURSE_KEY, N_CLUBS_KEY, N_REC_CENTER_KEY, GOLF_COURSE_QLTY_KEY,
+    TRAILS_QLTY_KEY, FISH_KEY, DOG_PARK_KEY, GATE_KEY, POOL_KEY, WOODWORK_KEY,
+    MTN_VIEW_KEY, SOFTBALL_KEY, ISOLATED_KEY, PICKLEBALL_KEY
+]
 SCORE_KEY = "Homebuyer Score"
 
 # ----------------------------------------------------------------------------#
@@ -52,24 +67,6 @@ logger = get_logger(f"{MODULE_NAME}.{__name__}")
 # ----------------------------------------------------------------------------#
 #                                 --- MAIN ---                                #
 # ----------------------------------------------------------------------------#
-def read_excel_sheet(xlsx_fn: str, sheet_num: int) -> pd.DataFrame:
-    """Read an excel sheet into a pandas DataFrame. Drops all rows where the
-    column acting as the primary key is only whitespace or NaN."""
-    logger.info(f"Reading sheet number {sheet_num} from '{xlsx_fn}' into DataFrame")
-    df = pd.read_excel(xlsx_fn, sheet_name=sheet_num)
-    
-    logger.info(f"Cleansing the DataFrame")
-    # remove leading/trailing whitespace
-    df.rename(columns=lambda x: x.strip(), inplace=True)  # headers
-    df[PRIMARY_KEY] = df[PRIMARY_KEY].str.strip()         # PK column
-    
-    df[PRIMARY_KEY].replace(to_replace='', value=np.nan, inplace=True)
-    df = df[df[PRIMARY_KEY].notnull()]  # drop row if PK cell is NaN
-    df.set_index(PRIMARY_KEY, inplace=True)
-    logger.debug(df.to_string())
-    return df
-
-
 def filter_communities(df: pd.DataFrame, hb_needs: dict) -> pd.DataFrame:
     """Filter communities by homebuyer needs."""
     logger.info(f"Filtering communities by homebuyer needs:\n" \

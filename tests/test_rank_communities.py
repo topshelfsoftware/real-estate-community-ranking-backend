@@ -27,13 +27,12 @@ os.environ["COMMUNITY_DATA_OBJECT_NAME"] = ""
 #                           --- Lambda Imports ---                            #
 # ----------------------------------------------------------------------------#
 sys.path.append(os.path.join(LAMBDAS_PATH, MODULE))
-from service.lambdas.rank_communities.src.app import (
-    SHEET_NUM_NEEDS, SHEET_NUM_WANTS, lambda_handler
-)
+from service.lambdas.rank_communities.src.app import lambda_handler
 from service.lambdas.rank_communities.src.communities import (
-    pd, SCORE_KEY,
-    read_excel_sheet, filter_communities, score_communities, rank_communities
+    pd, PRIMARY_KEY, SCORE_KEY, SHEET_NAME_NEEDS, SHEET_NAME_WANTS,
+    filter_communities, score_communities, rank_communities
 )
+from service.lambdas.rank_communities.src.excel import read_excel_sheet
 from service.lambdas.rank_communities.src.exceptions import (
     UnprocessableContentError
 )
@@ -43,16 +42,16 @@ from service.lambdas.rank_communities.src.exceptions import (
 # ----------------------------------------------------------------------------#
 @pytest.mark.parametrize("excel_file", get_test_excel_files("v1"))
 def test_01_read_excel(excel_file: str):
-    sheet_nums = [SHEET_NUM_NEEDS, SHEET_NUM_WANTS]
+    sheet_names = [SHEET_NAME_NEEDS, SHEET_NAME_WANTS]
     excel_fp = os.path.join(TEST_DATA_PATH, excel_file)
     expected_value = 28  # number of communities in the v1 dataset
-    for sheet_num in sheet_nums:
-        df = read_excel_sheet(excel_fp, sheet_num)
+    for sheet_name in sheet_names:
+        df = read_excel_sheet(excel_fp, sheet_name, PRIMARY_KEY)
         n_rows = len(df.index)
         assert n_rows == expected_value
 
 
-@pytest.mark.parametrize("excel_file, sheet_num", zip(get_test_excel_files("v1"), [SHEET_NUM_NEEDS]))
+@pytest.mark.parametrize("excel_file, sheet_name", zip(get_test_excel_files("v1"), [SHEET_NAME_NEEDS]))
 @pytest.mark.parametrize("event_file", get_test_event_files("valid"))
 def test_02_filter_communities(event_file, get_excel_as_df, get_event_as_dict):
     hb_needs = get_event_as_dict["needs"]
@@ -66,7 +65,7 @@ def test_02_filter_communities(event_file, get_excel_as_df, get_event_as_dict):
     assert n_rows == expected_values[event_file]
 
 
-@pytest.mark.parametrize("excel_file, sheet_num", zip(get_test_excel_files("v1"), [SHEET_NUM_WANTS]))
+@pytest.mark.parametrize("excel_file, sheet_name", zip(get_test_excel_files("v1"), [SHEET_NAME_WANTS]))
 @pytest.mark.parametrize("event_file", get_test_event_files("valid"))
 def test_03_score_communities(event_file, get_excel_as_df, get_event_as_dict):
     hb_wants = get_event_as_dict["wants"]
@@ -88,7 +87,7 @@ def test_03_score_communities(event_file, get_excel_as_df, get_event_as_dict):
         assert score == pytest.approx(expected_score)
 
 
-@pytest.mark.parametrize("excel_file, sheet_num", zip(get_test_excel_files("v1"), [SHEET_NUM_WANTS]))
+@pytest.mark.parametrize("excel_file, sheet_name", zip(get_test_excel_files("v1"), [SHEET_NAME_WANTS]))
 @pytest.mark.parametrize("event_file", get_test_event_files("valid"))
 def test_04_rank_communities(get_excel_as_df, get_event_as_dict):
     hb_wants = get_event_as_dict["wants"]
@@ -134,8 +133,8 @@ def test_06_lambda_handler_local_data(excel_file, event_file, get_event_as_dict)
 #                             --- Fixtures ---                                #
 # ----------------------------------------------------------------------------#
 @pytest.fixture
-def get_excel_as_df(excel_file: str, sheet_num: int) -> pd.DataFrame:
+def get_excel_as_df(excel_file: str, sheet_name: int) -> pd.DataFrame:
     """Read an Excel file sheet into a pandas DataFrame."""
     excel_fp = os.path.join(TEST_DATA_PATH, excel_file)
-    logger.info(f"reading Excel file {excel_file} (sheet {sheet_num}) into pandas DataFrame")
-    yield read_excel_sheet(excel_fp, sheet_num)
+    logger.info(f"reading Excel file {excel_file} (sheet {sheet_name}) into pandas DataFrame")
+    yield read_excel_sheet(excel_fp, sheet_name, PRIMARY_KEY)
