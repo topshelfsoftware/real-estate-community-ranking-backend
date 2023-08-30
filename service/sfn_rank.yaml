@@ -3,7 +3,7 @@ StartAt: ValidateInputs
 States:
   ValidateInputs:
     Type: Task
-    Resource: "${validate_inputs_arn}"
+    Resource: "${validate_rank_inputs_arn}"
     Next: RankCommunities
     Retry: [ {
       ErrorEquals: [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],

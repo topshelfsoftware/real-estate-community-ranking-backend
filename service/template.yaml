@@ -91,6 +91,7 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - !GetAtt RunRealEstateRanking.Arn
+                  - !GetAtt RunUpdateCommunityData.Arn
   
   WorkflowRole:
     Type: AWS::IAM::Role
@@ -103,21 +104,18 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-  
-  InvokeLambdaPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: RealEstateCommunityRankingInvokeLambdaPolicy
-      PolicyDocument:
-        Statement:
-          - Action:
-            - lambda:InvokeFunction
-            Effect: Allow
-            Resource:
-            - !GetAtt RankCommunities.Arn
-            - !GetAtt ValidateInputs.Arn
-      Roles:
-        - !Ref WorkflowRole
+      Policies:
+        - PolicyName: RealEstateCommunityRankingInvokeLambdaPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !GetAtt RankCommunities.Arn
+                  - !GetAtt UpdateCommunityData.Arn
+                  - !GetAtt ValidateCommunityData.Arn
+                  - !GetAtt ValidateRankInputs.Arn
   
   # --------------- API --------------- #
   RestApi:
@@ -126,6 +124,8 @@ Resources:
       Description: API for the real estate community ranking backend
       Name: !Join ['-', [!Ref AWS::StackName, api]]
       StageName: !Ref Env
+      BinaryMediaTypes:
+        - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet  # xlsx files
       EndpointConfiguration:
         Type: REGIONAL
 
@@ -165,6 +165,42 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref RankApiUsagePlan
 
+  UpdateDataApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn:
+      - UpdateDataApiUsagePlan
+    Properties:
+      Description: API Key for the /update_data endpoint
+      Name: !Join ['-', [update-data, api, key]]
+      Enabled: true
+      GenerateDistinctId: false
+      StageKeys:
+        - RestApiId: !Ref RestApi
+          StageName: !Ref Env
+
+  UpdateDataApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - RestApiStage
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestApi
+          Stage: !Ref Env
+      Description: Usage plan for the /update_data endpoint
+      UsagePlanName: !Join ['-', [update-data, api, usage, plan]]
+      Quota:
+        Limit: 100
+        Period: MONTH
+  
+  UpdateDataApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    DependsOn:
+      - UpdateDataApiKey
+    Properties:
+      KeyId: !Ref UpdateDataApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UpdateDataApiUsagePlan
+
   # --------------- LAMBDA --------------- #
   RunRealEstateRanking:
     Type: AWS::Serverless::Function
@@ -187,6 +223,30 @@ Resources:
           Type: Api
           Properties:
             Path: /rank
+            Method: post
+            RestApiId: !Ref RestApi
+
+  RunUpdateCommunityData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Launches the workflow to update the community data
+      CodeUri: lambdas/run_update_community_data
+      Handler: src.app.lambda_handler
+      Timeout: 25
+      # No VpcConfig => this Lambda deployed outsided VPC
+      Policies:
+        - VPCAccessPolicy: {}
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt UpdateCommunityDataWorkflow.Name
+        - AWSStepFunctionsReadOnlyAccess
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Ref UpdateCommunityDataWorkflow
+      Events:
+        Execute:
+          Type: Api
+          Properties:
+            Path: /update_data
             Method: post
             RestApiId: !Ref RestApi
 
@@ -217,11 +277,53 @@ Resources:
           COMMUNITY_DATA_BUCKET_NAME: !Ref CommunityDataS3Bucket
           COMMUNITY_DATA_OBJECT_NAME: !Ref CommunityDataS3Object
   
-  ValidateInputs:
+  UpdateCommunityData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Update the 55+ community dataset from excel file (provided as bytes string)
+      CodeUri: lambdas/update_community_data
+      Handler: src.app.lambda_handler
+      MemorySize: 128
+      Timeout: 10
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
+      Policies:
+        - VPCAccessPolicy: {}
+        - Statement:
+          - Action:
+            - s3:PutObject
+            Effect: Allow
+            Resource:
+            - !Sub "arn:aws:s3:::${CommunityDataS3Bucket}/*"
+      Environment:
+        Variables:
+          COMMUNITY_DATA_BUCKET_NAME: !Ref CommunityDataS3Bucket
+          COMMUNITY_DATA_OBJECT_NAME: !Ref CommunityDataS3Object
+  
+  ValidateCommunityData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Validate dataset of 55+ communities
+      CodeUri: lambdas/validate_community_data
+      Handler: src.app.lambda_handler
+      MemorySize: 256
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds: !Ref PrvSubnets
+      Policies:
+        - VPCAccessPolicy: {}
+      Layers:
+        - !Ref PandasLayer
+  
+  ValidateRankInputs:
     Type: AWS::Serverless::Function
     Properties:
       Description: Validate inputs to the 55+ community ranking service
-      CodeUri: lambdas/validate_inputs
+      CodeUri: lambdas/validate_rank_inputs
       Handler: src.app.lambda_handler
       Timeout: 5
       VpcConfig:
@@ -238,10 +340,19 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Role: !GetAtt WorkflowRole.Arn
-      DefinitionUri: sfn.yaml
+      DefinitionUri: sfn_rank.yaml
       DefinitionSubstitutions:
         rank_communities_arn: !GetAtt RankCommunities.Arn
-        validate_inputs_arn: !GetAtt ValidateInputs.Arn
+        validate_rank_inputs_arn: !GetAtt ValidateRankInputs.Arn
+
+  UpdateCommunityDataWorkflow:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Role: !GetAtt WorkflowRole.Arn
+      DefinitionUri: sfn_update_data.yaml
+      DefinitionSubstitutions:
+        update_community_data_arn: !GetAtt UpdateCommunityData.Arn
+        validate_update_community_data_arn: !GetAtt ValidateCommunityData.Arn
 
   # --------------- SSM --------------- #
   RankApiKeyId:
@@ -252,13 +363,29 @@ Resources:
       Type: String
       Value: !Ref RankApiKey
 
-  WorkflowArn:
+  UpdateDataApiKeyId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /sfn/real-estate/ranking/workflow/arn
+      Name: /api/key/id/real-estate/ranking/update-data
+      Description: API Key for the /rank endpoint
+      Type: String
+      Value: !Ref UpdateDataApiKey
+
+  RankWorkflowArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /sfn/real-estate/ranking/rank/arn
       Description: ARN for real estate community ranking stepfunction
       Type: String
       Value: !Ref RealEstateRankingWorkflow
+
+  UpdateDataWorkflowArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /sfn/real-estate/ranking/update-data/arn
+      Description: ARN for updating community data stepfunction
+      Type: String
+      Value: !Ref UpdateCommunityDataWorkflow
 
 # --------------- OUTPUTS --------------- #
 Outputs:
@@ -266,3 +393,7 @@ Outputs:
     Description: API Gateway endpoint URL for launching + polling the ranking workflow
     Value:
       !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/rank
+  UpdateDataEndpoint:
+    Description: API Gateway endpoint URL for launching + polling the workflow for updating community data
+    Value:
+      !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${Env}/update_data

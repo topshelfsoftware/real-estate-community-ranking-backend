@@ -12,8 +12,8 @@ from .sfn import SfnStatus, get_exec_hist, launch_sfn, poll_sfn
 # ----------------------------------------------------------------------------#
 from .__init__ import MODULE_NAME, STATE_MACHINE_ARN
 KNOWN_ERRORS = {
-    "ValidationError": HTTPStatus.BAD_REQUEST,
-    "UnprocessableContentError": HTTPStatus.UNPROCESSABLE_ENTITY
+    "AssertionError": HTTPStatus.BAD_REQUEST,
+    "WorksheetNotFoundError": HTTPStatus.BAD_REQUEST
 }
 
 # ----------------------------------------------------------------------------#
@@ -26,13 +26,8 @@ logger = get_logger(f"{MODULE_NAME}.{__name__}")
 # ----------------------------------------------------------------------------#
 def lambda_handler(event, context):
     logger.info(f"event: {fmt_json(event)}")
-
-    body = event["body"]
-    # convert body from string to dict if req'd
-    if isinstance(body, str):
-        body = json.loads(body)
-        logger.info(f"Converted event['body'] to type: {type(body)}")
-    logger.info(f"event body: {fmt_json(body)}")
+    binary = event["body"]
+    payload = {"xlsx_blob_encoded": binary}
 
     status = HTTPStatus.OK
     resp_body = {
@@ -43,7 +38,7 @@ def lambda_handler(event, context):
 
     # launch the stepfunction
     try:
-        execution_arn = launch_sfn(payload=body)
+        execution_arn = launch_sfn(payload=payload)
         resp_body["metadata"]["executionArn"] = execution_arn
     except BotoClientError as e:
         status = HTTPStatus.BAD_GATEWAY
@@ -82,7 +77,7 @@ def lambda_handler(event, context):
         if resp_status == SfnStatus.FAILED.value:
             exec_history = get_exec_hist(execution_arn)
             
-            fail_param = "executionFailedEventDetails"            
+            fail_param = "executionFailedEventDetails"
             for exec in exec_history["events"]:
                 if fail_param in exec:
                     error = exec[fail_param]["error"]

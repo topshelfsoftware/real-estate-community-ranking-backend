@@ -1,0 +1,23 @@
+Comment: Update Real Estate Community Data Workflow
+StartAt: ValidateData
+States:
+  ValidateData:
+    Type: Task
+    Resource: "${validate_update_community_data_arn}"
+    Next: UpdateCommunityData
+    Retry: [ {
+      ErrorEquals: [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+      IntervalSeconds: 2,
+      MaxAttempts: 6,
+      BackoffRate: 2
+    } ]
+  UpdateCommunityData:
+    Type: Task
+    Resource: "${update_community_data_arn}"
+    End: true
+    Retry: [ {
+      ErrorEquals: [ "Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+      IntervalSeconds: 2,
+      MaxAttempts: 6,
+      BackoffRate: 2
+    } ]

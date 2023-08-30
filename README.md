@@ -6,7 +6,7 @@ A tool to rank communities in the Phoenix metro area based on a homebuyer's need
 
 ![Real Estate Community Ranking Diagram](architecture/real-estate-community-ranking.svg)
 
-The backend service consists of a REST API, several Lambda functions, and a simple state machine as detailed in the architecture diagram.
+The backend service consists of a REST API, several Lambda functions, and two simple state machines for each endpoint as detailed in the architecture diagram.
 
 ## Dependencies
 

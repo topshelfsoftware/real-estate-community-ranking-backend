@@ -1,6 +1,4 @@
-import os
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
-MODULE_NAME = "validate_inputs"
-SRC_PATH = os.path.dirname(os.path.realpath(__file__))
+MODULE_NAME = "validate_community_data"
