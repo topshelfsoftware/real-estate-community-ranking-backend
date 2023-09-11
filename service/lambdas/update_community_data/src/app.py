@@ -24,16 +24,16 @@ logger = get_logger(f"{MODULE_NAME}.{__name__}")
 def lambda_handler(event, context):
     logger.info(f"event: {fmt_json(event)}")
     
-    xlsx_blob_encoded: str = event["xlsx_blob_encoded"]
-    logger.info(f"encoded: {xlsx_blob_encoded}")
+    xlsx_b64_encoded: str = event["xlsx_base64_encoded"]
+    logger.info(f"encoded: {xlsx_b64_encoded}")
     
-    # decode the base64 encoded blob and read into memory
-    xlsx_blob = base64.b64decode(xlsx_blob_encoded)
-    logger.info(f"decoded: {xlsx_blob}")
+    # decode the base64 encoded payload and read into memory
+    xlsx_data = base64.b64decode(xlsx_b64_encoded)
+    logger.info(f"decoded: {xlsx_data}")
 
     try:
         logger.info(f"uploading xlsx bytes to s3 bucket {COMMUNITY_DATA_BUCKET_NAME}")
-        resp = s3_client.put_object(Body=xlsx_blob,
+        resp = s3_client.put_object(Body=xlsx_data,
                                     Bucket=COMMUNITY_DATA_BUCKET_NAME,
                                     Key=COMMUNITY_DATA_OBJECT_NAME)
         logger.info("successfully uploaded")

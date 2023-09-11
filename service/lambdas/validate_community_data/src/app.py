@@ -39,15 +39,15 @@ logger = get_logger(f"{MODULE_NAME}.{__name__}")
 def lambda_handler(event, context):
     logger.info(f"event: {fmt_json(event)}")
     
-    xlsx_blob_encoded: str = event["xlsx_blob_encoded"]
-    logger.info(f"encoded: {xlsx_blob_encoded}")
+    xlsx_b64_encoded: str = event["xlsx_base64_encoded"]
+    logger.info(f"encoded: {xlsx_b64_encoded}")
     
-    # decode the base64 encoded blob and read into memory
-    xlsx_blob = base64.b64decode(xlsx_blob_encoded)
-    logger.info(f"decoded: {xlsx_blob}")
-    xls_filelike = io.BytesIO(xlsx_blob)
-    df_needs = read_excel_sheet(xls_filelike, SHEET_NAME_NEEDS, PRIMARY_KEY)
-    df_wants = read_excel_sheet(xls_filelike, SHEET_NAME_WANTS, PRIMARY_KEY)
+    # decode the base64 encoded payload and read into memory
+    xlsx_data = base64.b64decode(xlsx_b64_encoded)
+    logger.info(f"decoded: {xlsx_data}")
+    xlsx_filelike = io.BytesIO(xlsx_data)
+    df_needs = read_excel_sheet(xlsx_filelike, SHEET_NAME_NEEDS, PRIMARY_KEY)
+    df_wants = read_excel_sheet(xlsx_filelike, SHEET_NAME_WANTS, PRIMARY_KEY)
 
     # validate the excel file using assertions
     # invalid conditions will raise an AssertionError

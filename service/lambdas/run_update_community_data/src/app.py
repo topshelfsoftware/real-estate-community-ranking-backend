@@ -46,7 +46,7 @@ def lambda_handler(event, context):
     bin_data_base64_bytes = base64.b64encode(bin_data)
     bin_data_base64_str = bin_data_base64_bytes.decode("utf-8")
     logger.info(f"binary data base64 encoded string: {bin_data_base64_str}")
-    payload = {"xlsx_blob_encoded": bin_data_base64_str}
+    payload = {"xlsx_base64_encoded": bin_data_base64_str}
 
     status = HTTPStatus.OK
     resp_body = {
