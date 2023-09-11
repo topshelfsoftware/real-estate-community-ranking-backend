@@ -103,6 +103,8 @@ def lambda_handler(event, context):
                     logger.error(f"failure cause: {error}")
                     if error in KNOWN_ERRORS.keys():
                         status = KNOWN_ERRORS[error]
+                    else:
+                        status = HTTPStatus.INTERNAL_SERVER_ERROR
                     try:
                         resp_body["error"] = json.loads(exec[fail_param]["cause"])
                     except:
