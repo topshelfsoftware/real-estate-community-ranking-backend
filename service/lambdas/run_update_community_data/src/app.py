@@ -1,3 +1,4 @@
+import base64
 from http import HTTPStatus
 import json
 
@@ -26,8 +27,26 @@ logger = get_logger(f"{MODULE_NAME}.{__name__}")
 # ----------------------------------------------------------------------------#
 def lambda_handler(event, context):
     logger.info(f"event: {fmt_json(event)}")
-    binary = event["body"]
-    payload = {"xlsx_blob_encoded": binary}
+    payload_base64_encoded = event["body"]
+    payload_decoded = base64.b64decode(payload_base64_encoded)
+    logger.info(f"payload decoded: {payload_decoded}")
+
+    try:
+        # check if binary data was sent as a 'Buffer'
+        buffer = json.loads(payload_decoded.decode())
+        payload_type = buffer['type']
+        bin_data = bytes(buffer["data"])  
+    except UnicodeDecodeError:
+        # data was delivered as decoded string
+        payload_type = "decoded string"
+        bin_data = payload_decoded
+    finally:
+        logger.info(f"payload type: {payload_type}")
+        logger.info(f"payload binary data: {bin_data}")
+    bin_data_base64_bytes = base64.b64encode(bin_data)
+    bin_data_base64_str = bin_data_base64_bytes.decode("utf-8")
+    logger.info(f"binary data base64 encoded string: {bin_data_base64_str}")
+    payload = {"xlsx_blob_encoded": bin_data_base64_str}
 
     status = HTTPStatus.OK
     resp_body = {
