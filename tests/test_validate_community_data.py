@@ -6,7 +6,7 @@ import pytest
 
 from topshelfsoftware_util.log import get_logger
 
-from conftest import get_test_event_files, get_test_excel_files
+from conftest import get_test_excel_files
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
@@ -30,7 +30,7 @@ from service.lambdas.validate_community_data.src.app import lambda_handler
 @pytest.mark.parametrize("excel_file", get_test_excel_files("v1"))
 def test_01_lambda_handler_valid(get_excel_as_encoded_bin):
     event = {
-        "xlsx_blob_encoded": get_excel_as_encoded_bin
+        "xlsx_base64_encoded": get_excel_as_encoded_bin
     }
     resp = lambda_handler(event, None)
     assert(resp is not None)
@@ -39,7 +39,7 @@ def test_01_lambda_handler_valid(get_excel_as_encoded_bin):
 @pytest.mark.parametrize("excel_file", get_test_excel_files("v0"))
 def test_02_lambda_handler_invalid(get_excel_as_encoded_bin):
     event = {
-        "xlsx_blob_encoded": get_excel_as_encoded_bin
+        "xlsx_base64_encoded": get_excel_as_encoded_bin
     }
     with pytest.raises(AssertionError):
         lambda_handler(event, None)
