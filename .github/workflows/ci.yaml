@@ -8,6 +8,11 @@ on:
     branches:
       - main
 
+env:
+  # boto3 needs this env var if region is not
+  # specified when creating clients
+  AWS_DEFAULT_REGION: us-west-2
+
 jobs:
   test:
     runs-on: ubuntu-latest
