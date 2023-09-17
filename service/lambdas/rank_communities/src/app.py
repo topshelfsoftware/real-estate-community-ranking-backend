@@ -1,8 +1,8 @@
 from botocore.exceptions import ClientError as BotoClientError
 import pandas as pd
 
-from topshelfsoftware_util.aws import create_boto3_client
-from topshelfsoftware_util.common import fmt_json
+from topshelfsoftware_aws_util.client import create_boto3_client
+from topshelfsoftware_util.json import fmt_json
 from topshelfsoftware_util.io import cdtmp
 from topshelfsoftware_util.log import get_logger
 

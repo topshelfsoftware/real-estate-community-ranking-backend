@@ -3,7 +3,7 @@
 
 version=0.1
 [default]
-[default.deploy]
+[default.deploy.parameters]
 [devl.deploy.parameters]
 region = "us-west-2"
 s3_bucket = "topshelfsoftware-sam-deploy-00001-1-devl"

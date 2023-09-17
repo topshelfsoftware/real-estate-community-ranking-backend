@@ -1,9 +1,10 @@
 """Validation module for service inputs."""
 
-import json
 import os
 
 import jsonschema
+
+from topshelfsoftware_util.json import load_json_schema
 from topshelfsoftware_util.log import get_logger
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
@@ -29,7 +30,7 @@ def validate_payload(payload: dict):
         Payload for the service.
     """
     logger.info("Validating the payload data structure")
-    payload_schema = _load_schema(PAYLOAD_SCHEMA_FILE)
+    payload_schema = load_json_schema(PAYLOAD_SCHEMA_FILE)
     try:
         jsonschema.validate(instance=payload, schema=payload_schema)
         logger.info("Payload structure is valid per JSON schema")
@@ -37,16 +38,3 @@ def validate_payload(payload: dict):
         logger.error(e)
         raise e
     return
-
-
-def _load_schema(file: str) -> dict:
-    """Loads a JSON schema file into a dictionary."""
-    try:
-        logger.info(f"Reading schema file: {file}")
-        with open(file) as f:
-            schema = json.loads(f.read())
-            logger.debug(f"schema: {json.dumps(schema)}")
-    except Exception as e:
-        raise Exception(f"Failed to read schema file: {file}. Reason: {e}")
-    
-    return schema

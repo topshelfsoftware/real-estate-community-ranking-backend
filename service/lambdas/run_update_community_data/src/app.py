@@ -4,10 +4,11 @@ import json
 
 from botocore.exceptions import ClientError as BotoClientError
 
-from topshelfsoftware_util.common import fmt_json
+from topshelfsoftware_aws_util.sfn import (
+    SfnStatus, get_exec_hist, launch_sfn, poll_sfn
+)
+from topshelfsoftware_util.json import fmt_json
 from topshelfsoftware_util.log import get_logger
-
-from .sfn import SfnStatus, get_exec_hist, launch_sfn, poll_sfn
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
@@ -57,7 +58,7 @@ def lambda_handler(event, context):
 
     # launch the stepfunction
     try:
-        execution_arn = launch_sfn(payload=payload)
+        execution_arn = launch_sfn(STATE_MACHINE_ARN, payload=payload)
         resp_body["metadata"]["executionArn"] = execution_arn
     except BotoClientError as e:
         status = HTTPStatus.BAD_GATEWAY

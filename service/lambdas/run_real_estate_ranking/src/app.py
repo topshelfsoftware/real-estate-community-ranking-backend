@@ -3,17 +3,20 @@ import json
 
 from botocore.exceptions import ClientError as BotoClientError
 
-from topshelfsoftware_util.common import fmt_json
+from topshelfsoftware_aws_util.sfn import (
+    SfnStatus, get_exec_hist, launch_sfn, poll_sfn
+)
+from topshelfsoftware_util.json import fmt_json
 from topshelfsoftware_util.log import get_logger
-
-from .sfn import SfnStatus, get_exec_hist, launch_sfn, poll_sfn
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #
 # ----------------------------------------------------------------------------#
 from .__init__ import MODULE_NAME, STATE_MACHINE_ARN
 KNOWN_ERRORS = {
     "ValidationError": HTTPStatus.BAD_REQUEST,
-    "UnprocessableContentError": HTTPStatus.UNPROCESSABLE_ENTITY
+    "UnprocessableContentError": HTTPStatus.UNPROCESSABLE_ENTITY,
+    # if a worksheet cannot be found when running rankings, this is our fault
+    "WorksheetNotFoundError": HTTPStatus.INTERNAL_SERVER_ERROR
 }
 
 # ----------------------------------------------------------------------------#
@@ -43,7 +46,7 @@ def lambda_handler(event, context):
 
     # launch the stepfunction
     try:
-        execution_arn = launch_sfn(payload=body)
+        execution_arn = launch_sfn(STATE_MACHINE_ARN, payload=body)
         resp_body["metadata"]["executionArn"] = execution_arn
     except BotoClientError as e:
         status = HTTPStatus.BAD_GATEWAY
