@@ -2,8 +2,8 @@ import base64
 
 from botocore.exceptions import ClientError as BotoClientError
 
-from topshelfsoftware_util.aws import create_boto3_client
-from topshelfsoftware_util.common import fmt_json
+from topshelfsoftware_aws_util.client import create_boto3_client
+from topshelfsoftware_util.json import fmt_json
 from topshelfsoftware_util.log import get_logger
 # ----------------------------------------------------------------------------#
 #                               --- Globals ---                               #

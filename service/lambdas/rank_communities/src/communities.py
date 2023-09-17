@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from topshelfsoftware_util.common import fmt_json
+from topshelfsoftware_util.json import fmt_json
 from topshelfsoftware_util.log import get_logger
 
 from .enum_needs import Filter, Price, Location, Size
