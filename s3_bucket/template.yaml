@@ -11,17 +11,17 @@ Parameters:
       - devl
       - prod
   ProjectId:
-     Type: String
-     Description: Identifier for the project
-     MinLength: '7'
-     MaxLength: '9'
-     AllowedPattern: '(\d{5}-\d{1,3})'
-     ConstraintDescription: must include exactly five digits, one dash, and one to three more digits (e.g. 12345-678)
-     Default: 00001-1
+    Type: String
+    Description: Identifier for the project
+    MinLength: '7'
+    MaxLength: '9'
+    AllowedPattern: '(\d{5}-\d{1,3})'
+    ConstraintDescription: must include exactly five digits, one dash, and one to three more digits (e.g. 12345-678)
+    Default: 00001-1
   S3ObjectName:
-     Type: String
-     Description: Name of the community data file
-     Default: 55+_Communities.xlsx
+    Type: String
+    Description: Name of the community data file
+    Default: 55+_Communities.xlsx
 
 Resources:
   # ---------------- S3 Bucket ---------------- #
