@@ -1,7 +1,7 @@
 Comment: Update Real Estate Community Data Workflow
-StartAt: ValidateData
+StartAt: ValidateCommunityData
 States:
-  ValidateData:
+  ValidateCommunityData:
     Type: Task
     Resource: "${validate_update_community_data_arn}"
     Next: UpdateCommunityData
