@@ -19,9 +19,9 @@ Parameters:
   PubSubnets:
     Type: AWS::SSM::Parameter::Value<CommaDelimitedList>
     Default: /vpc/public/subnet/ids
-  TopshelfUtilLayer:
+  TopshelfAwsUtilLayer:
     Type: AWS::SSM::Parameter::Value<String>
-    Default: /lambda/layer/arn/topshelfsoftware-util
+    Default: /lambda/layer/arn/topshelfsoftware-aws-util
   JsonSchemaLayer:
     Type: AWS::SSM::Parameter::Value<String>
     Default: /lambda/layer/arn/jsonschema
@@ -41,7 +41,7 @@ Globals:
     Timeout: 30
     Runtime: python3.9
     Layers:
-      - !Ref TopshelfUtilLayer
+      - !Ref TopshelfAwsUtilLayer
   Api:
     Cors:
       AllowHeaders: "'*'"
