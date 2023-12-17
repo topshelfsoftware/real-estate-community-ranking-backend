@@ -117,6 +117,14 @@ Resources:
                   - !GetAtt ValidateCommunityData.Arn
                   - !GetAtt ValidateRankInputs.Arn
   
+  EventBridgeInvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt ValidateRankInputs.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt WeeklyLambdaTrigger.Arn
+  
   # --------------- API --------------- #
   RestApi:
     Type: AWS::Serverless::Api
@@ -353,6 +361,18 @@ Resources:
       DefinitionSubstitutions:
         update_community_data_arn: !GetAtt UpdateCommunityData.Arn
         validate_update_community_data_arn: !GetAtt ValidateCommunityData.Arn
+
+  # --------------- EVENTS --------------- #
+  WeeklyLambdaTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Scheduled rule to trigger Lambda once a week
+      ScheduleExpression: 'cron(0 0 ? * SUN *)'  # Trigger every Sunday at midnight UTC
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ValidateRankInputs.Arn
+          Id: WeeklyValidateRankInputsLambdaTrigger
+          Input: "{\"triggered_by\":\"WeeklyLambdaTrigger\",\"needs\":{\"price_range_lower\":\"200k\",\"price_range_upper\":\"400k\",\"age_of_home\":\"Does not matter\",\"location\":[\"West Valley\",\"East Valley\",\"Central\"],\"size_of_community\":[\"Small\",\"Medium\",\"Large\"]},\"wants\":{\"gated\":1,\"quality_golf_courses\":1,\"mult_golf_courses\":1,\"mountain_views\":1,\"many_social_clubs\":1,\"softball_field\":1,\"isolated_from_city\":1,\"fishing\":1,\"woodwork_shop\":1,\"indoor_pool\":1,\"quality_trails\":1,\"dog_park\":1,\"competitive_pickleball\":1},\"email_address\":\"hi@example.com\",\"email_homebuyer\":false}"
 
   # --------------- SSM --------------- #
   RankApiKeyId:
